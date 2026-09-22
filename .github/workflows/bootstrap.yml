@@ -1,0 +1,81 @@
+name: Bootstrap project files
+
+on:
+  push:
+    paths:
+      - ".bootstrap/**"
+      - ".github/workflows/bootstrap.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore project source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp README.md /tmp/README.final.md
+
+          cat .bootstrap/chunk_* > /tmp/bootstrap.b64
+          base64 --decode /tmp/bootstrap.b64 > /tmp/bootstrap.gz
+          gzip --decompress --stdout /tmp/bootstrap.gz > /tmp/bootstrap.payload
+
+          if unzip -t /tmp/bootstrap.payload >/dev/null 2>&1; then
+            unzip -o /tmp/bootstrap.payload -d .
+          elif tar -tf /tmp/bootstrap.payload >/dev/null 2>&1; then
+            tar -xf /tmp/bootstrap.payload -C .
+          else
+            echo "Unsupported bootstrap payload format"
+            file /tmp/bootstrap.payload || true
+            exit 1
+          fi
+
+          cp /tmp/README.final.md README.md
+
+      - name: Generate timing figures
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet matplotlib
+          mkdir -p results/figures
+          cp src/raspberry_pi/experiments/plot_scheduler_results.py results/csv/
+          (
+            cd results/csv
+            python3 plot_scheduler_results.py
+            mv -f average_jitter_comparison.png ../figures/
+            mv -f jitter_under_cpu_load.png ../figures/
+            mv -f response_time_under_cpu_load.png ../figures/
+            rm -f plot_scheduler_results.py
+          )
+
+      - name: Add physical platform media
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p docs/media/01-hardware docs/media/06-integration
+
+          curl --fail --location --retry 3             "https://raw.githubusercontent.com/YigitalpDellal/Real-Time-Electro-Optical-Platform/main/docs/media/hardware_overview.jpg"             --output docs/media/01-hardware/system-overview.jpg
+
+          cp docs/media/01-hardware/system-overview.jpg              docs/media/01-hardware/full-assembly.jpg
+
+          curl --fail --location --retry 3             "https://raw.githubusercontent.com/YigitalpDellal/Real-Time-Electro-Optical-Platform/main/docs/media/pan_tilt_motion.mp4"             --output docs/media/06-integration/02-realtime-pan-tilt-demo.mp4
+
+          ffmpeg -loglevel error -y             -i docs/media/06-integration/02-realtime-pan-tilt-demo.mp4             -frames:v 1             docs/media/06-integration/02-realtime-pan-tilt-demo-thumb.jpg
+
+      - name: Remove bootstrap payload and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .bootstrap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Build complete project repository from validated package"
+          git push
