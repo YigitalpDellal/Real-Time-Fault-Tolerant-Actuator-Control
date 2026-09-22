@@ -4,6 +4,14 @@
   <b>Raspberry Pi 3 Model B+ + TM4C123GXL | POSIX Real-Time Scheduling | UART | Hardware PWM | Fault Injection | Fail-Safe Control</b>
 </p>
 
+<p align="center">
+  <img src="docs/media/01-hardware/total-system.png" width="900" alt="Complete Real-Time Fault-Tolerant Dual-Axis Actuator Control hardware setup">
+</p>
+
+<p align="center">
+  <sub>Complete physical prototype used in this project: Raspberry Pi 3 Model B+, TM4C123GXL LaunchPad, breadboard interconnects, external actuator power stage, and dual-axis PAN/TILT mechanism.</sub>
+</p>
+
 A dual-processor embedded control testbed built to study **real-time scheduling, timing faults, communication failures, priority inversion, recovery mechanisms, and deterministic actuator control on real hardware**.
 
 The Raspberry Pi executes the high-level real-time workload and supervision logic. The TM4C123GXL owns low-level PAN/TILT PWM generation and provides an **independent 300 ms communication watchdog**, so actuator safety does not depend entirely on Linux remaining healthy.
@@ -29,14 +37,6 @@ The Raspberry Pi executes the high-level real-time workload and supervision logi
 ---
 
 ## Physical Prototype
-
-<p align="center">
-  <img src="docs/media/01-hardware/total-system.png" width="900" alt="Complete Real-Time Fault-Tolerant Dual-Axis Actuator Control hardware setup">
-</p>
-
-<p align="center">
-  <sub>Complete physical prototype used in this project: Raspberry Pi 3 Model B+, TM4C123GXL LaunchPad, breadboard interconnects, external actuator power stage, and dual-axis PAN/TILT mechanism.</sub>
-</p>
 
 The final test platform combines a Raspberry Pi 3 Model B+, TM4C123GXL LaunchPad, two MG90S servos, a dual-axis bracket, an external 5 V actuator supply, and shared-ground UART communication.
 
@@ -78,9 +78,18 @@ Every image below comes from this repository's own measured runs. The gallery is
 | PAN | PB6 / M0PWM0 | 45° | 90° | 135° |
 | TILT | PB7 / M0PWM1 | 55° | 90° | 125° |
 
-The servos are **not powered from the Raspberry Pi rail**. They use the external 5 V source, while Raspberry Pi and TM4C123 share ground for a valid UART reference.
+### Key wiring
 
-The controller-side wiring, external actuator supply and shared-ground arrangement are documented here independently from the scheduler and fault-injection evidence.
+| Connection | Purpose |
+|---|---|
+| Raspberry Pi GPIO14 / `/dev/serial0` TX → TM4C123 PB0 / U1RX | Pi-to-MCU UART commands |
+| Raspberry Pi GPIO15 / `/dev/serial0` RX ← TM4C123 PB1 / U1TX | MCU acknowledgements |
+| Raspberry Pi GND ↔ TM4C123 GND ↔ actuator-supply GND | Shared electrical reference |
+| TM4C123 PB6 / M0PWM0 → PAN servo signal | Hardware PWM for PAN |
+| TM4C123 PB7 / M0PWM1 → TILT servo signal | Hardware PWM for TILT |
+| External regulated 5 V → servo power rail | Actuator power |
+
+The servos are **not powered from the Raspberry Pi rail**. They use the external regulated 5 V source, while Raspberry Pi, TM4C123 and the actuator supply share ground.
 
 ---
 
@@ -176,11 +185,11 @@ The main physical experiment uses five periodic services.
 | MONITOR | 200 ms | 50 | Observe system state and supervisory information |
 | LOGGER | 1000 ms | 40 | Record low-rate experiment status |
 
-This assignment follows Rate Monotonic ordering: shorter periods receive higher fixed priorities.
+This task set follows Rate Monotonic ordering: shorter periods receive higher fixed priorities.
 
 ---
 
-# Experiment 1 — Linux Scheduler Baseline
+## Experiment 1 — Linux Scheduler Baseline
 
 The first objective was to measure how the CONTROL task behaves under the default Linux scheduler and under POSIX real-time scheduling.
 
@@ -230,7 +239,7 @@ The most important comparison is the CPU-load case: average release jitter fell 
 
 ---
 
-# Experiment 2 — Raspberry Pi ↔ TM4C123 Integration
+## Experiment 2 — Raspberry Pi ↔ TM4C123 Integration
 
 Before the full real-time application is allowed to run, the Raspberry Pi verifies the MCU communication link.
 
@@ -282,7 +291,7 @@ The final physical run below is also the integration proof: COMM executes 1,200 
 
 ---
 
-# Experiment 3 — Independent Communication Watchdog
+## Experiment 3 — Independent Communication Watchdog
 
 A key design requirement was that the physical mechanism must not remain indefinitely at the last command if the Raspberry Pi stops communicating.
 
@@ -311,7 +320,7 @@ The corresponding firmware is in [`src/tm4c123/main.c`](src/tm4c123/main.c).
 
 ---
 
-# Experiment 4 — Communication-Loss Fault State Machine
+## Experiment 4 — Communication-Loss Fault State Machine
 
 At Raspberry Pi level, communication health is also supervised.
 
@@ -348,7 +357,7 @@ The 40 failed transactions are consistent with a two-second fault interval at a 
 
 ---
 
-# Experiment 5 — Raw Deadline Overload
+## Experiment 5 — Raw Deadline Overload
 
 The next fault was intentionally created inside the highest-priority CONTROL task.
 
@@ -383,7 +392,7 @@ Source: [`rt_deadline_fault_raw.c`](src/raspberry_pi/experiments/rt_deadline_fau
 
 ---
 
-# Experiment 6 — Supervised Timing-Fault Recovery
+## Experiment 6 — Supervised Timing-Fault Recovery
 
 The raw overload showed why detecting only UART errors is insufficient. If COMM itself is starved, it cannot run often enough to report communication failures.
 
@@ -427,7 +436,7 @@ Source: [`rt_timing_fault_supervised.c`](src/raspberry_pi/fault_tolerance/rt_tim
 
 ---
 
-# Experiment 7 — Priority Inversion
+## Experiment 7 — Priority Inversion
 
 The project also reproduces a classic fixed-priority concurrency problem.
 
@@ -466,7 +475,7 @@ Source: [`priority_inversion_test.c`](src/raspberry_pi/experiments/priority_inve
 
 ---
 
-# Experiment 8 — Rate Monotonic vs Deadline Monotonic
+## Experiment 8 — Rate Monotonic vs Deadline Monotonic
 
 Rate Monotonic assigns priority according to task period. That is not always ideal when a task has a deadline much shorter than its period.
 
@@ -502,7 +511,7 @@ Source: [`rm_vs_dm_test.c`](src/raspberry_pi/experiments/rm_vs_dm_test.c)
 
 ---
 
-# Final Test — 60-Second Powered Physical Validation
+## Final Test — 60-Second Powered Physical Validation
 
 The final validation was performed with the complete Raspberry Pi + TM4C123 + powered PAN/TILT hardware.
 
@@ -550,12 +559,12 @@ RM sufficient bound for 5 tasks ≈ 0.7435
   <img src="docs/media/11-validation/03-60s-physical-validation-timing.png" width="49%" alt="60-second powered physical validation timing">
   <img src="docs/media/11-validation/04-60s-physical-validation-summary.png" width="49%" alt="60-second powered physical validation summary">
 </p>
-<p align="center"><sub>Final powered run: timing statistics and communication/actuator summary captured from the Raspberry Pi terminal.</sub></p>
+<p align="center"><sub>Final powered run: figures generated from the retained 60-second physical-validation measurements.</sub></p>
 
 Raw evidence:
 
-- [Final 60-second validation log](results/logs/final_60s_validation.txt)
-- [Final 60-second powered physical validation log](results/logs/final_60s_physical_validation.txt)
+- [Authoritative 60-second powered physical validation log](results/logs/final_60s_physical_validation.txt)
+- [Earlier 60-second integration validation log](results/logs/final_60s_validation.txt)
 - [Long-run validation source](src/raspberry_pi/experiments/rt_long_run_validation.c)
 
 ---
@@ -614,17 +623,18 @@ Full notes: [Problems Encountered and Solutions](docs/TROUBLESHOOTING.md)
 
 ---
 
-## Build on Raspberry Pi
+## Build and Run
 
-Install the required tools:
+### Raspberry Pi programs
+
+Install the C build tools:
 
 ```bash
 sudo apt update
-sudo apt install build-essential python3-pip
-python3 -m pip install -r requirements.txt
+sudo apt install build-essential
 ```
 
-Build Raspberry Pi C programs:
+Build the Raspberry Pi C programs:
 
 ```bash
 make
@@ -635,6 +645,21 @@ The binaries are written to:
 ```text
 build/
 ```
+
+The Python dependencies are only needed for the UART helper tests and plotting scripts. A virtual environment keeps them separate from the system Python installation:
+
+```bash
+sudo apt install python3-venv
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### TM4C123 firmware
+
+The MCU application source is [`src/tm4c123/main.c`](src/tm4c123/main.c). It targets the **EK-TM4C123GXL LaunchPad / TM4C123GH6PM** and uses TivaWare DriverLib for UART, PWM, GPIO, SysTick and interrupt support.
+
+Build and flash this source from a Code Composer Studio project configured for the TM4C123GXL with TivaWare available. The repository stores the MCU application source, but not a complete CCS workspace or generated IDE metadata.
 
 Real-time scheduling experiments require permission to create `SCHED_FIFO` threads. The experiments were pinned to CPU 3 during testing:
 
