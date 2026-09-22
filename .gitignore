@@ -1,0 +1,20 @@
+# Build products
+build/
+*.o
+*.out
+*.elf
+*.bin
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.tmp
