@@ -1,0 +1,94 @@
+Verifying TM4C123 communication...
+[PASS] TM4C123 UART verified.
+
+=== REAL-TIME UART MULTI-SERVICE TEST ===
+
+Service    Period     Priority   Cycles    
+------------------------------------------
+CONTROL    20      ms 80         3000      
+COMM       50      ms 70         1200      
+HEALTH     100     ms 60         600       
+MONITOR    200     ms 50         300       
+LOGGER     1000    ms 40         60        
+
+CONTROL -> shared setpoint -> COMM -> UART -> TM4C123
+Scheduler: SCHED_FIFO / Rate Monotonic
+Duration : 60 seconds
+
+
+=== SERVICE TIMING RESULTS ===
+
+[CONTROL]
+  Period            : 20.000 ms
+  Priority          : 80
+  Average jitter    : 23.794 us
+  Worst jitter      : 116.878 us
+  Average execution : 0.621 us
+  Observed max exec : 38.906 us
+  Average response  : 24.414 us
+  Worst response    : 120.732 us
+  Deadline misses   : 0 / 3000
+  Observed util.    : 0.001945
+
+[COMM]
+  Period            : 50.000 ms
+  Priority          : 70
+  Average jitter    : 31.829 us
+  Worst jitter      : 146.200 us
+  Average execution : 1363.509 us
+  Observed max exec : 3516.390 us
+  Average response  : 1395.338 us
+  Worst response    : 3662.590 us
+  Deadline misses   : 0 / 1200
+  Observed util.    : 0.070328
+
+[HEALTH]
+  Period            : 100.000 ms
+  Priority          : 60
+  Average jitter    : 91.026 us
+  Worst jitter      : 279.600 us
+  Average execution : 1.684 us
+  Observed max exec : 2.969 us
+  Average response  : 92.710 us
+  Worst response    : 282.152 us
+  Deadline misses   : 0 / 600
+  Observed util.    : 0.000030
+
+[MONITOR]
+  Period            : 200.000 ms
+  Priority          : 50
+  Average jitter    : 106.514 us
+  Worst jitter      : 269.429 us
+  Average execution : 24.159 us
+  Observed max exec : 25.937 us
+  Average response  : 130.672 us
+  Worst response    : 295.158 us
+  Deadline misses   : 0 / 300
+  Observed util.    : 0.000130
+
+[LOGGER]
+  Period            : 1000.000 ms
+  Priority          : 40
+  Average jitter    : 163.479 us
+  Worst jitter      : 308.075 us
+  Average execution : 8.477 us
+  Observed max exec : 9.219 us
+  Average response  : 171.957 us
+  Worst response    : 317.137 us
+  Deadline misses   : 0 / 60
+  Observed util.    : 0.000009
+
+=== COMMUNICATION HEALTH ===
+Successful UART transactions : 1261
+Failed UART transactions     : 0
+Consecutive failures         : 0
+HEALTH state                 : HEALTHY
+
+=== FINAL SETPOINT ===
+PAN  : 90 degrees
+TILT : 90 degrees
+
+=== OBSERVED PROCESSOR UTILIZATION ===
+Sum(C_i / T_i) = 0.072442
+RM sufficient bound for 5 tasks ~= 0.7435
+Observed utilization is below the classical RM sufficient bound.
