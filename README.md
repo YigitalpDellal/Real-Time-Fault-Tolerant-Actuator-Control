@@ -604,6 +604,15 @@ Full notes: [Problems Encountered and Solutions](docs/TROUBLESHOOTING.md)
 │   │   ├── fault_tolerance/
 │   │   └── experiments/
 │   └── tm4c123/
+│       └── main.c
+│
+├── firmware/
+│   └── tm4c123_ccs/
+│       ├── .project
+│       ├── .cproject
+│       ├── .ccsproject
+│       ├── tm4c123gh6pm.cmd
+│       └── targetConfigs/
 │
 ├── tests/
 │   ├── uart_ping_test.py
@@ -659,7 +668,7 @@ pip install -r requirements.txt
 
 The MCU application source is [`src/tm4c123/main.c`](src/tm4c123/main.c). It targets the **EK-TM4C123GXL LaunchPad / TM4C123GH6PM** and uses TivaWare DriverLib for UART, PWM, GPIO, SysTick and interrupt support.
 
-A complete importable CCS project is included in [firmware/tm4c123_ccs](firmware/tm4c123_ccs/README.md). It links the canonical [src/tm4c123/main.c](src/tm4c123/main.c), includes the TM4C123GH6PM linker command file and target configuration, and is configured for the Stellaris ICDI debug connection.
+A CCS project package is included in [firmware/tm4c123_ccs](firmware/tm4c123_ccs/README.md). It links the canonical [src/tm4c123/main.c](src/tm4c123/main.c), includes the TM4C123GH6PM linker command file and target configuration, and is configured for the Stellaris ICDI debug connection.
 
 The project uses TivaWare DriverLib. Its default `SW_ROOT` is `C:/ti/TivaWare_C_Series-2.2.0.295`; if TivaWare is installed elsewhere, update that path in the CCS project as described in the firmware README.
 
