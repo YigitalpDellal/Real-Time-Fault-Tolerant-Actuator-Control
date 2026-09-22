@@ -1,0 +1,42 @@
+name: Restore project hardware image
+
+on:
+  push:
+    paths:
+      - ".media_chunks/hardware_*.txt"
+      - ".github/workflows/restore-project-hardware.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Decode validated project hardware collage
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p docs/media/01-hardware
+          cat .media_chunks/hardware_*.txt | tr -d '\n\r' | base64 --decode > docs/media/01-hardware/project-hardware-overview.jpg
+          file docs/media/01-hardware/project-hardware-overview.jpg
+          test "$(head -c 2 docs/media/01-hardware/project-hardware-overview.jpg | xxd -p)" = "ffd8"
+
+      - name: Commit media and remove temporary transport files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .media_chunks
+          rm -f .github/workflows/restore-project-hardware.yml
+          rmdir .github/workflows 2>/dev/null || true
+          rmdir .github 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Add verified project hardware overview"
+          git push
