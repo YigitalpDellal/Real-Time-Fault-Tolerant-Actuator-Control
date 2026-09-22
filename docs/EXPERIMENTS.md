@@ -1,12 +1,10 @@
 # Experiment Notes
 
-This page records the detailed measurements behind the main README. Every linked artifact below exists in the repository.
+This page records the measurements and evidence currently stored in this repository.
 
 ## 1. CONTROL scheduling baseline
 
 The CONTROL task uses a 20 ms period and 20 ms deadline.
-
-Measured timing:
 
 | Condition | Average jitter | Worst jitter | Average response | Worst response | Deadline misses |
 |---|---:|---:|---:|---:|---:|
@@ -14,8 +12,6 @@ Measured timing:
 | SCHED_FIFO / no load | 21.618 µs | 77.969 µs | 101.880 µs | 196.288 µs | 0 / 1000 |
 | SCHED_OTHER / CPU load | 120.019 µs | 8203.196 µs | 156.095 µs | 8239.341 µs | 0 / 1000 |
 | SCHED_FIFO / CPU load | 10.052 µs | 60.820 µs | 46.066 µs | 97.278 µs | 0 / 1000 |
-
-Figures:
 
 ![Average jitter comparison](../results/figures/average_jitter_comparison.png)
 
@@ -30,29 +26,19 @@ Raw CSV data:
 - [SCHED_OTHER under CPU load](../results/csv/control_timing_sched_other_load.csv)
 - [SCHED_FIFO under CPU load](../results/csv/control_timing_sched_fifo_load.csv)
 
-## 2. Physical UART integration
-
-The Raspberry Pi real-time scheduler communicates with the TM4C123 actuator node over UART.
-
-[Open physical PAN/TILT demonstration](media/06-integration/02-realtime-pan-tilt-demo.mp4)
-
-[![Physical PAN/TILT demonstration](media/06-integration/02-realtime-pan-tilt-demo-thumb.jpg)](media/06-integration/02-realtime-pan-tilt-demo.mp4)
-
-## 3. Communication-loss safety design
+## 2. Communication-loss safety design
 
 The TM4C123 has a local 300 ms communication watchdog. When valid Raspberry Pi commands stop arriving, the MCU independently returns both actuators to the 90° safe center.
 
-This behavior is implemented in:
+Relevant files:
 
 - [TM4C123 firmware](../src/tm4c123/main.c)
 - [Watchdog fault test](../tests/watchdog_fault_test.py)
 - [Raspberry Pi fault-tolerant supervisor](../src/raspberry_pi/fault_tolerance/rt_fault_tolerant.c)
 
-## 4. Raw CONTROL deadline fault
+## 3. Raw CONTROL deadline fault
 
 A 25 ms workload was deliberately inserted into CONTROL, which has a 20 ms period/deadline.
-
-Raw result:
 
 | Service | Deadline misses |
 |---|---:|
@@ -62,15 +48,11 @@ Raw result:
 | MONITOR | 10 / 50 |
 | LOGGER | 2 / 10 |
 
-The high-priority overload created cascading delays through the lower-priority services.
-
 Source:
 
 - [Raw deadline-fault experiment](../src/raspberry_pi/experiments/rt_deadline_fault_raw.c)
 
-## 5. Supervised timing-fault recovery
-
-The supervisor monitors CONTROL timing directly. Three consecutive CONTROL misses trigger the SAFE state. The faulty workload is shed, new actuator motion is inhibited, and recovery requires a stable timing interval.
+## 4. Supervised timing-fault recovery
 
 Measured state transitions:
 
@@ -98,15 +80,7 @@ Source:
 
 - [Supervised timing-fault implementation](../src/raspberry_pi/fault_tolerance/rt_timing_fault_supervised.c)
 
-## 6. Priority inversion
-
-Three single-core `SCHED_FIFO` threads were used:
-
-```text
-HIGH   = 80
-MEDIUM = 60
-LOW    = 40
-```
+## 5. Priority inversion
 
 Without priority inheritance:
 
@@ -128,15 +102,7 @@ Source:
 
 - [Priority inversion experiment](../src/raspberry_pi/experiments/priority_inversion_test.c)
 
-## 7. Rate Monotonic vs Deadline Monotonic
-
-Task set:
-
-| Task | Execution | Period | Deadline |
-|---|---:|---:|---:|
-| FAST_A | 8 ms | 40 ms | 40 ms |
-| URGENT_B | 8 ms | 50 ms | 12 ms |
-| SLOW_C | 4 ms | 100 ms | 100 ms |
+## 6. Rate Monotonic vs Deadline Monotonic
 
 For `URGENT_B`:
 
@@ -151,9 +117,7 @@ Source:
 
 - [RM vs DM experiment](../src/raspberry_pi/experiments/rm_vs_dm_test.c)
 
-## 8. 60-second powered validation
-
-Final physical validation:
+## 7. 60-second powered validation
 
 ```text
 CONTROL : 0 / 3000 deadline misses
@@ -185,3 +149,7 @@ Raw logs:
 Source:
 
 - [Long-run validation program](../src/raspberry_pi/experiments/rt_long_run_validation.c)
+
+## Evidence policy
+
+Only artifacts that belong to this project and are actually present in the repository are referenced here. Media from the earlier electro-optical platform project is intentionally excluded.
