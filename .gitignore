@@ -18,3 +18,8 @@ Thumbs.db
 *~
 *.swp
 *.tmp
+
+# CCS generated build output
+firmware/tm4c123_ccs/Debug/
+firmware/tm4c123_ccs/Release/
+firmware/tm4c123_ccs/.settings/
