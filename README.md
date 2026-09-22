@@ -37,7 +37,7 @@ The final test platform combines a Raspberry Pi 3 Model B+, TM4C123GXL LaunchPad
 </p>
 <p align="center"><sub>Complete physical system with Raspberry Pi, TM4C123GXL, breadboard wiring, external actuator power and the PAN/TILT mechanism connected.</sub></p>
 
-The image above is the actual complete hardware setup used for the project. It is shown first because it gives the clearest single view of how the Raspberry Pi, microcontroller, actuator power, wiring and dual-axis mechanism are connected as one system.
+The image above is the actual complete hardware setup used for the project. It is shown first, at full repository quality and without being merged into a collage, because it gives the clearest single view of the Raspberry Pi, TM4C123GXL, breadboard wiring, external actuator power and dual-axis mechanism connected as one system.
 
 ### Visual Evidence Gallery
 
@@ -79,10 +79,7 @@ Every image below comes from this repository's own measured runs. The gallery is
 
 The servos are **not powered from the Raspberry Pi rail**. They use the external 5 V source, while Raspberry Pi and TM4C123 share ground for a valid UART reference.
 
-<p align="center">
-  <img src="docs/media/01-hardware/controller-wiring.jpg" width="800" alt="Controller wiring and external 5 V actuator power">
-</p>
-<p align="center"><sub>Closer view of the controller-side wiring, external 5 V actuator supply and shared-ground connection used during bring-up.</sub></p>
+The full-system photograph above is kept as the primary hardware view instead of using a stitched collage. The controller-side wiring, external actuator supply and shared-ground arrangement are described directly here so the original image quality is preserved.
 
 ---
 
