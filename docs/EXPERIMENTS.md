@@ -1,36 +1,12 @@
-# Experiment Notes and Evidence
+# Experiment Notes
 
-This document collects the detailed test evidence behind the summary in the main README.
+This page records the detailed measurements behind the main README. Every linked artifact below exists in the repository.
 
-## 1. UART and actuator bring-up
+## 1. CONTROL scheduling baseline
 
-The communication path was verified before enabling the complete real-time service set.
+The CONTROL task uses a 20 ms period and 20 ms deadline.
 
-![Serial port verification](media/02-uart/00-serial-port-verification.png)
-
-![PING/ACK verification](media/02-uart/02-ping-ack-terminal.png)
-
-![Actuator protocol verification](media/03-actuator/03-actuator-protocol-verification.png)
-
-![Dual-axis protocol verification](media/03-actuator/05-dual-axis-protocol-verification.png)
-
-Video evidence:
-
-- [Center command test](media/03-actuator/02-center-test.mp4)
-- [UART PAN control](media/03-actuator/04-uart-pan-control-demo.mp4)
-- [Dual-axis motion](media/03-actuator/06-dual-axis-motion-demo.mp4)
-
-## 2. CONTROL scheduling baseline
-
-The baseline CONTROL task used a 20 ms period and 20 ms deadline.
-
-![CONTROL baseline](media/04-scheduling/01-control-task-baseline.png)
-
-![SCHED_OTHER summary](media/04-scheduling/02-sched-other-baseline-summary.png)
-
-![SCHED_FIFO summary](media/04-scheduling/03-sched-fifo-timing-summary.png)
-
-Measured CONTROL values from the retained CSV data:
+Measured timing:
 
 | Condition | Average jitter | Worst jitter | Average response | Worst response | Deadline misses |
 |---|---:|---:|---:|---:|---:|
@@ -39,77 +15,44 @@ Measured CONTROL values from the retained CSV data:
 | SCHED_OTHER / CPU load | 120.019 µs | 8203.196 µs | 156.095 µs | 8239.341 µs | 0 / 1000 |
 | SCHED_FIFO / CPU load | 10.052 µs | 60.820 µs | 46.066 µs | 97.278 µs | 0 / 1000 |
 
+Figures:
+
 ![Average jitter comparison](../results/figures/average_jitter_comparison.png)
 
 ![Jitter under CPU load](../results/figures/jitter_under_cpu_load.png)
 
 ![Response time under CPU load](../results/figures/response_time_under_cpu_load.png)
 
-## 3. Rate Monotonic multi-service baseline
+Raw CSV data:
 
-The periodic service set is:
+- [SCHED_OTHER baseline](../results/csv/control_timing_sched_other_baseline.csv)
+- [SCHED_FIFO baseline](../results/csv/control_timing_sched_fifo_baseline.csv)
+- [SCHED_OTHER under CPU load](../results/csv/control_timing_sched_other_load.csv)
+- [SCHED_FIFO under CPU load](../results/csv/control_timing_sched_fifo_load.csv)
 
-| Service | Period | Priority |
-|---|---:|---:|
-| CONTROL | 20 ms | 80 |
-| COMM | 50 ms | 70 |
-| HEALTH | 100 ms | 60 |
-| MONITOR | 200 ms | 50 |
-| LOGGER | 1000 ms | 40 |
+## 2. Physical UART integration
 
-![RM service results](media/05-rate-monotonic/01-rm-service-results-top.png)
+The Raspberry Pi real-time scheduler communicates with the TM4C123 actuator node over UART.
 
-![RM utilization summary](media/05-rate-monotonic/02-rm-utilization-summary.png)
+[Open physical PAN/TILT demonstration](media/06-integration/02-realtime-pan-tilt-demo.mp4)
 
-## 4. Physical UART integration
+[![Physical PAN/TILT demonstration](media/06-integration/02-realtime-pan-tilt-demo-thumb.jpg)](media/06-integration/02-realtime-pan-tilt-demo.mp4)
 
-The multi-service scheduler was connected to the TM4C123 actuator node over UART.
+## 3. Communication-loss safety design
 
-![RT UART health test](media/06-integration/01-rt-uart-health-test.png)
+The TM4C123 has a local 300 ms communication watchdog. When valid Raspberry Pi commands stop arriving, the MCU independently returns both actuators to the 90° safe center.
 
-![Physical service results](media/06-integration/03-physical-rt-service-results.png)
+This behavior is implemented in:
 
-![Physical health summary](media/06-integration/04-physical-rt-health-summary.png)
+- [TM4C123 firmware](../src/tm4c123/main.c)
+- [Watchdog fault test](../tests/watchdog_fault_test.py)
+- [Raspberry Pi fault-tolerant supervisor](../src/raspberry_pi/fault_tolerance/rt_fault_tolerant.c)
 
-[Real-time pan-tilt video](media/06-integration/02-realtime-pan-tilt-demo.mp4)
+## 4. Raw CONTROL deadline fault
 
-## 5. Communication-loss fault injection
+A 25 ms workload was deliberately inserted into CONTROL, which has a 20 ms period/deadline.
 
-Complete UART traffic loss was injected between 4.0 s and 6.0 s.
-
-Observed communication summary:
-
-```text
-Successful transactions : 170
-Failed transactions     : 40
-```
-
-The 40 failed transactions correspond to the 2-second fault interval at a 50 ms COMM period.
-
-Observed state sequence:
-
-```text
-NORMAL -> DEGRADED -> SAFE -> NORMAL
-```
-
-![Watchdog recovery terminal](media/07-fault-injection/02-watchdog-recovery-terminal.png)
-
-![State-machine transition log](media/07-fault-injection/03-state-machine-transition-log.png)
-
-![Fault timing results](media/07-fault-injection/04-fault-test-timing-results.png)
-
-![Physical safe-state log](media/07-fault-injection/06-physical-safe-state-log.png)
-
-Videos:
-
-- [TM4C123 local watchdog fail-safe](media/07-fault-injection/01-local-watchdog-failsafe-demo.mp4)
-- [Physical SAFE-state demonstration](media/07-fault-injection/05-safe-state-physical-demo.mp4)
-
-## 6. Raw deadline fault
-
-A 25 ms CPU workload was deliberately injected into CONTROL, whose period/deadline is 20 ms.
-
-Raw overload results:
+Raw result:
 
 | Service | Deadline misses |
 |---|---:|
@@ -119,13 +62,15 @@ Raw overload results:
 | MONITOR | 10 / 50 |
 | LOGGER | 2 / 10 |
 
-![Raw CONTROL overload](media/08-deadline-fault/01-overload-deadline-misses.png)
+The high-priority overload created cascading delays through the lower-priority services.
 
-![Cascading deadline misses](media/08-deadline-fault/02-overload-cascade-results.png)
+Source:
 
-## 7. Supervised timing-fault recovery
+- [Raw deadline-fault experiment](../src/raspberry_pi/experiments/rt_deadline_fault_raw.c)
 
-The supervisor was extended to use CONTROL deadline health directly. Three consecutive CONTROL misses cause `SAFE`. The faulty workload is then shed, actuator motion is inhibited, and recovery requires 25 healthy CONTROL cycles after the injected fault interval.
+## 5. Supervised timing-fault recovery
+
+The supervisor monitors CONTROL timing directly. Three consecutive CONTROL misses trigger the SAFE state. The faulty workload is shed, new actuator motion is inhibited, and recovery requires a stable timing interval.
 
 Measured state transitions:
 
@@ -149,11 +94,13 @@ After supervision:
 
 ![Recovery state log](media/08-deadline-fault/04-supervised-state-recovery.png)
 
-[Physical supervised timing-fault demo](media/08-deadline-fault/05-supervised-timing-safe-demo.mp4)
+Source:
 
-## 8. Priority inversion and priority inheritance
+- [Supervised timing-fault implementation](../src/raspberry_pi/fault_tolerance/rt_timing_fault_supervised.c)
 
-Single-core `SCHED_FIFO` priorities:
+## 6. Priority inversion
+
+Three single-core `SCHED_FIFO` threads were used:
 
 ```text
 HIGH   = 80
@@ -164,29 +111,24 @@ LOW    = 40
 Without priority inheritance:
 
 ```text
-LOW mutex hold wall time : 230.172 ms
-HIGH blocking time       : 220.222 ms
-MEDIUM wall time         : 150.003 ms
+HIGH blocking time = 220.222 ms
 ```
 
 With `PTHREAD_PRIO_INHERIT`:
 
 ```text
-LOW mutex hold wall time : 80.064 ms
-HIGH blocking time       : 70.119 ms
-MEDIUM wall time         : 150.011 ms
+HIGH blocking time = 70.119 ms
 ```
 
-Measured HIGH blocking reduction:
+Measured blocking reduction: **68.16%**.
 
-```text
-150.103 ms
-68.16%
-```
+![Priority inheritance comparison](media/09-priority-inversion/01-priority-inheritance-comparison.png)
 
-![Priority inversion comparison](media/09-priority-inversion/01-priority-inheritance-comparison.png)
+Source:
 
-## 9. Rate Monotonic vs Deadline Monotonic
+- [Priority inversion experiment](../src/raspberry_pi/experiments/priority_inversion_test.c)
+
+## 7. Rate Monotonic vs Deadline Monotonic
 
 Task set:
 
@@ -198,20 +140,20 @@ Task set:
 
 For `URGENT_B`:
 
-| Policy | Priority | Misses | Worst response |
+| Policy | Priority | Deadline misses | Worst response |
 |---|---:|---:|---:|
 | Rate Monotonic | 70 | 25 / 100 | 16.083 ms |
 | Deadline Monotonic | 80 | 0 / 100 | 8.112 ms |
 
-![Full RM/DM results](media/10-rm-vs-dm/01-rm-dm-full-results.png)
-
 ![URGENT_B comparison](media/10-rm-vs-dm/02-urgent-task-comparison.png)
 
-## 10. 60-second final validation
+Source:
 
-A 60-second run was recorded both as a normal long-run validation and as a powered physical validation.
+- [RM vs DM experiment](../src/raspberry_pi/experiments/rm_vs_dm_test.c)
 
-Final powered result:
+## 8. 60-second powered validation
+
+Final physical validation:
 
 ```text
 CONTROL : 0 / 3000 deadline misses
@@ -237,9 +179,9 @@ Sum(C_i / T_i) = 0.069792
 
 Raw logs:
 
-- [`final_60s_validation.txt`](../results/logs/final_60s_validation.txt)
-- [`final_60s_physical_validation.txt`](../results/logs/final_60s_physical_validation.txt)
+- [Final 60-second validation](../results/logs/final_60s_validation.txt)
+- [Final 60-second powered physical validation](../results/logs/final_60s_physical_validation.txt)
 
-A repository-sized video preview is available here:
+Source:
 
-- [60-second physical validation preview](media/11-validation/05-60s-physical-validation-preview.mp4)
+- [Long-run validation program](../src/raspberry_pi/experiments/rt_long_run_validation.c)
