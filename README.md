@@ -10,6 +10,22 @@ The Raspberry Pi executes the high-level real-time workload and supervision logi
 
 > **Final powered validation:** 5,160 periodic jobs, 1,261 successful UART transactions, **0 deadline misses**, and **0 UART failures** during a 60-second physical run.
 
+## Quick Navigation
+
+- [Physical Prototype](#physical-prototype)
+- [System Architecture](#system-architecture)
+- [Real-Time Task Set](#real-time-task-set)
+- [Experiment 1 — Linux Scheduler Baseline](#experiment-1--linux-scheduler-baseline)
+- [Experiment 2 — Raspberry Pi ↔ TM4C123 Integration](#experiment-2--raspberry-pi--tm4c123-integration)
+- [Experiment 3 — Independent Communication Watchdog](#experiment-3--independent-communication-watchdog)
+- [Experiment 4 — Communication-Loss Fault State Machine](#experiment-4--communication-loss-fault-state-machine)
+- [Experiment 5 — Raw Deadline Overload](#experiment-5--raw-deadline-overload)
+- [Experiment 6 — Supervised Timing-Fault Recovery](#experiment-6--supervised-timing-fault-recovery)
+- [Experiment 7 — Priority Inversion](#experiment-7--priority-inversion)
+- [Experiment 8 — Rate Monotonic vs Deadline Monotonic](#experiment-8--rate-monotonic-vs-deadline-monotonic)
+- [Final 60-Second Physical Validation](#final-test--60-second-powered-physical-validation)
+- [Problems Encountered During Development](#problems-encountered-during-development)
+
 ---
 
 ## Physical Prototype
@@ -21,6 +37,25 @@ The final test platform combines a Raspberry Pi 3 Model B+, TM4C123GXL LaunchPad
 </p>
 
 The hardware image above is built only from photographs of this project: the complete controller setup, external servo-power wiring, and controller-side assembly used during development.
+
+### Visual Evidence Gallery
+
+Every image below comes from this repository's own measured runs. The gallery is deliberately arranged as a quick technical story: scheduler behavior, injected faults, recovery, concurrency behavior, deadline-policy comparison, and final physical validation.
+
+<table>
+<tr>
+<td width="50%" align="center"><b>Scheduler timing</b><br><img src="results/figures/average_jitter_comparison.png" width="100%" alt="Measured average jitter comparison"><br><sub>SCHED_OTHER and SCHED_FIFO measurements from the Raspberry Pi timing experiments.</sub></td>
+<td width="50%" align="center"><b>Timing-fault supervision</b><br><img src="docs/media/08-deadline-fault/03-supervised-timing-results.png" width="100%" alt="Supervised timing fault results"><br><sub>CONTROL deadline-overrun fault with timing-aware supervision enabled.</sub></td>
+</tr>
+<tr>
+<td width="50%" align="center"><b>Priority inversion mitigation</b><br><img src="docs/media/09-priority-inversion/01-priority-inheritance-comparison.png" width="100%" alt="Priority inheritance terminal result"><br><sub>Measured HIGH-priority blocking before and after PTHREAD_PRIO_INHERIT.</sub></td>
+<td width="50%" align="center"><b>RM vs DM</b><br><img src="docs/media/10-rm-vs-dm/02-urgent-task-comparison.png" width="100%" alt="RM versus DM comparison"><br><sub>The constrained-deadline URGENT_B task misses under RM and is protected under DM.</sub></td>
+</tr>
+<tr>
+<td width="50%" align="center"><b>60 s physical timing result</b><br><img src="docs/media/11-validation/03-60s-physical-validation-timing.png" width="100%" alt="60 second physical timing result"><br><sub>Measured timing statistics from the powered final validation.</sub></td>
+<td width="50%" align="center"><b>60 s communication health</b><br><img src="docs/media/11-validation/04-60s-physical-validation-summary.png" width="100%" alt="60 second communication health summary"><br><sub>1,261 successful UART transactions, zero failures, HEALTHY final state.</sub></td>
+</tr>
+</table>
 
 ### Hardware used
 
@@ -174,11 +209,13 @@ The most important comparison is the CPU-load case: average release jitter fell 
 <p align="center">
   <img src="results/figures/average_jitter_comparison.png" width="850" alt="Average jitter comparison">
 </p>
+<p align="center"><sub>Average release jitter across the four scheduler/load conditions.</sub></p>
 
 <p align="center">
   <img src="results/figures/jitter_under_cpu_load.png" width="49%" alt="Release jitter under CPU load">
   <img src="results/figures/response_time_under_cpu_load.png" width="49%" alt="Response time under CPU load">
 </p>
+<p align="center"><sub>Left: release jitter under CPU load. Right: response time under the same load.</sub></p>
 
 ### Raw measurement data
 
@@ -230,6 +267,14 @@ The repository contains standalone tests so the communication layer can be valid
 - [Watchdog fault test](tests/watchdog_fault_test.py)
 
 This separation was useful during bring-up because a UART wiring/protocol problem could be isolated from a scheduling problem instead of debugging the entire stack at once.
+
+The final physical run below is also the integration proof: COMM executes 1,200 periodic jobs while exchanging commands with the TM4C123, and the health summary ends with 1,261 successful transactions and zero failures.
+
+<p align="center">
+  <img src="docs/media/11-validation/04-60s-physical-validation-summary.png" width="900" alt="Physical UART integration and final communication health">
+</p>
+
+<p align="center"><sub>Physical UART integration evidence from the 60-second powered validation.</sub></p>
 
 ---
 
@@ -370,6 +415,7 @@ t=6.480 s | SAFE     -> NORMAL   | NONE
   <img src="docs/media/08-deadline-fault/03-supervised-timing-results.png" width="49%" alt="Supervised timing fault results">
   <img src="docs/media/08-deadline-fault/04-supervised-state-recovery.png" width="49%" alt="Supervised safe-state recovery">
 </p>
+<p align="center"><sub>Measured terminal evidence: timing statistics on the left, state transition and recovery evidence on the right.</sub></p>
 
 During `SAFE`, the deliberately faulty CONTROL workload is shed and new actuator motion is inhibited. Once timing remains healthy for the recovery interval, the system returns to `NORMAL`.
 
@@ -408,6 +454,7 @@ Measured reduction:
 <p align="center">
   <img src="docs/media/09-priority-inversion/01-priority-inheritance-comparison.png" width="900" alt="Priority inversion and priority inheritance comparison">
 </p>
+<p align="center"><sub>Actual terminal output from the single-core priority-inversion experiment.</sub></p>
 
 Priority inheritance temporarily allows the low-priority mutex owner to inherit the blocked high-priority thread's priority, reducing interference from MEDIUM.
 
@@ -443,6 +490,7 @@ U = 8/40 + 8/50 + 4/100 = 0.400
 <p align="center">
   <img src="docs/media/10-rm-vs-dm/02-urgent-task-comparison.png" width="900" alt="Rate Monotonic versus Deadline Monotonic results">
 </p>
+<p align="center"><sub>Measured URGENT_B behavior: RM misses the 12 ms relative deadline; DM completes all 100 jobs without a miss.</sub></p>
 
 The experiment demonstrates why relative deadline can matter more than period for constrained-deadline systems.
 
@@ -498,6 +546,7 @@ RM sufficient bound for 5 tasks ≈ 0.7435
   <img src="docs/media/11-validation/03-60s-physical-validation-timing.png" width="49%" alt="60-second powered physical validation timing">
   <img src="docs/media/11-validation/04-60s-physical-validation-summary.png" width="49%" alt="60-second powered physical validation summary">
 </p>
+<p align="center"><sub>Final powered run: timing statistics and communication/actuator summary captured from the Raspberry Pi terminal.</sub></p>
 
 Raw evidence:
 
