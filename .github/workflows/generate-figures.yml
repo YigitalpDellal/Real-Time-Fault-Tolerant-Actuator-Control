@@ -1,0 +1,39 @@
+name: Generate timing figures
+
+on:
+  push:
+    paths:
+      - ".github/workflows/generate-figures.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  figures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate plots from retained measurements
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet matplotlib
+          mkdir -p results/figures
+          cp src/raspberry_pi/experiments/plot_scheduler_results.py results/csv/
+          (
+            cd results/csv
+            python3 plot_scheduler_results.py
+            mv -f average_jitter_comparison.png ../figures/
+            mv -f jitter_under_cpu_load.png ../figures/
+            mv -f response_time_under_cpu_load.png ../figures/
+            rm -f plot_scheduler_results.py
+          )
+      - name: Commit generated figures
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/figures
+          git commit -m "Add measured scheduler analysis figures"
+          git push
