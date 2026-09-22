@@ -659,7 +659,9 @@ pip install -r requirements.txt
 
 The MCU application source is [`src/tm4c123/main.c`](src/tm4c123/main.c). It targets the **EK-TM4C123GXL LaunchPad / TM4C123GH6PM** and uses TivaWare DriverLib for UART, PWM, GPIO, SysTick and interrupt support.
 
-Build and flash this source from a Code Composer Studio project configured for the TM4C123GXL with TivaWare available. The repository stores the MCU application source, but not a complete CCS workspace or generated IDE metadata.
+A complete importable CCS project is included in [firmware/tm4c123_ccs](firmware/tm4c123_ccs/README.md). It links the canonical [src/tm4c123/main.c](src/tm4c123/main.c), includes the TM4C123GH6PM linker command file and target configuration, and is configured for the Stellaris ICDI debug connection.
+
+The project uses TivaWare DriverLib. Its default `SW_ROOT` is `C:/ti/TivaWare_C_Series-2.2.0.295`; if TivaWare is installed elsewhere, update that path in the CCS project as described in the firmware README.
 
 Real-time scheduling experiments require permission to create `SCHED_FIFO` threads. The experiments were pinned to CPU 3 during testing:
 
@@ -679,6 +681,7 @@ sudo taskset -c 3 ./build/rt_long_run_validation
 | File | Purpose |
 |---|---|
 | [TM4C123 `main.c`](src/tm4c123/main.c) | UART parser, hardware PWM, angle limits and local watchdog |
+| [TM4C123 CCS project](firmware/tm4c123_ccs/README.md) | Importable CCS metadata, linker memory map and Stellaris ICDI target configuration |
 | [`rt_multiservice_uart.c`](src/raspberry_pi/fault_tolerance/rt_multiservice_uart.c) | Physical multi-service Raspberry Pi ↔ TM4C123 real-time test |
 | [`rt_fault_tolerant.c`](src/raspberry_pi/fault_tolerance/rt_fault_tolerant.c) | Communication-loss fault injection and supervisory state machine |
 | [`rt_timing_fault_supervised.c`](src/raspberry_pi/fault_tolerance/rt_timing_fault_supervised.c) | Deadline-fault detection, SAFE state and recovery |
