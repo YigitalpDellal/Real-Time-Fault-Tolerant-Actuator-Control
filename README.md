@@ -30,6 +30,14 @@ The Raspberry Pi executes the high-level real-time workload and supervision logi
 
 ## Physical Prototype
 
+<p align="center">
+  <img src="docs/media/01-hardware/total-system.png" width="900" alt="Complete Real-Time Fault-Tolerant Dual-Axis Actuator Control hardware setup">
+</p>
+
+<p align="center">
+  <sub>Complete physical prototype used in this project: Raspberry Pi 3 Model B+, TM4C123GXL LaunchPad, breadboard interconnects, external actuator power stage, and dual-axis PAN/TILT mechanism.</sub>
+</p>
+
 The final test platform combines a Raspberry Pi 3 Model B+, TM4C123GXL LaunchPad, two MG90S servos, a dual-axis bracket, an external 5 V actuator supply, and shared-ground UART communication.
 
 ### Visual Evidence Gallery
