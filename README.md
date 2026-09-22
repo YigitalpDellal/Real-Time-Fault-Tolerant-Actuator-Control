@@ -33,10 +33,11 @@ The Raspberry Pi executes the high-level real-time workload and supervision logi
 The final test platform combines a Raspberry Pi 3 Model B+, TM4C123GXL LaunchPad, two MG90S servos, a dual-axis bracket, an external 5 V actuator supply, and shared-ground UART communication.
 
 <p align="center">
-  <img src="docs/media/01-hardware/project-hardware-overview.jpg" width="900" alt="Real-Time Fault-Tolerant Actuator Control physical hardware">
+  <img src="docs/media/01-hardware/project-hardware-overview.jpg" width="900" alt="Complete Raspberry Pi, TM4C123 and dual-axis actuator hardware setup">
 </p>
+<p align="center"><sub>Complete physical system with Raspberry Pi, TM4C123GXL, breadboard wiring, external actuator power and the PAN/TILT mechanism connected.</sub></p>
 
-The hardware image above is built only from photographs of this project: the complete controller setup, external servo-power wiring, and controller-side assembly used during development.
+The image above is the actual complete hardware setup used for the project. It is shown first because it gives the clearest single view of how the Raspberry Pi, microcontroller, actuator power, wiring and dual-axis mechanism are connected as one system.
 
 ### Visual Evidence Gallery
 
@@ -77,6 +78,11 @@ Every image below comes from this repository's own measured runs. The gallery is
 | TILT | PB7 / M0PWM1 | 55° | 90° | 125° |
 
 The servos are **not powered from the Raspberry Pi rail**. They use the external 5 V source, while Raspberry Pi and TM4C123 share ground for a valid UART reference.
+
+<p align="center">
+  <img src="docs/media/01-hardware/controller-wiring.jpg" width="800" alt="Controller wiring and external 5 V actuator power">
+</p>
+<p align="center"><sub>Closer view of the controller-side wiring, external 5 V actuator supply and shared-ground connection used during bring-up.</sub></p>
 
 ---
 
