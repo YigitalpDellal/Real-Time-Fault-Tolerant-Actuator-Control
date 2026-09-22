@@ -6,8 +6,6 @@ The Raspberry Pi runs fixed-priority Linux real-time tasks for control, communic
 
 > **Final powered validation:** 5,160 periodic jobs, 1,261 successful UART transactions, **0 deadline misses** and **0 UART failures** during a 60-second run.
 
-![System overview](docs/media/01-hardware/system-overview.jpg)
-
 ## What this project demonstrates
 
 - Linux `SCHED_FIFO` fixed-priority scheduling
@@ -115,12 +113,6 @@ The Raspberry Pi supervisor separately manages:
 ```text
 NORMAL -> DEGRADED -> SAFE -> NORMAL
 ```
-
-## Physical demo
-
-[Open the real-time PAN/TILT demo](docs/media/06-integration/02-realtime-pan-tilt-demo.mp4)
-
-[![Real-time PAN/TILT demo](docs/media/06-integration/02-realtime-pan-tilt-demo-thumb.jpg)](docs/media/06-integration/02-realtime-pan-tilt-demo.mp4)
 
 ## Scheduler comparison
 
