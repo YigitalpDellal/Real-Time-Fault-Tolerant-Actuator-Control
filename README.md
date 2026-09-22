@@ -50,7 +50,7 @@ Every image below comes from this repository's own measured runs. The gallery is
 <td width="50%" align="center"><b>Timing-fault supervision</b><br><img src="docs/media/08-deadline-fault/03-supervised-timing-results.png" width="100%" alt="Supervised timing fault results"><br><sub>CONTROL deadline-overrun fault with timing-aware supervision enabled.</sub></td>
 </tr>
 <tr>
-<td width="50%" align="center"><b>Priority inversion mitigation</b><br><img src="docs/media/09-priority-inversion/01-priority-inheritance-comparison.png" width="100%" alt="Priority inheritance terminal result"><br><sub>Measured HIGH-priority blocking before and after PTHREAD_PRIO_INHERIT.</sub></td>
+<td width="50%" align="center"><b>Priority inversion mitigation</b><br><img src="docs/media/09-priority-inversion/01-priority-inheritance-comparison.png" width="100%" alt="Measured priority inheritance comparison"><br><sub>Measured HIGH-priority blocking before and after PTHREAD_PRIO_INHERIT.</sub></td>
 <td width="50%" align="center"><b>RM vs DM</b><br><img src="docs/media/10-rm-vs-dm/02-urgent-task-comparison.png" width="100%" alt="RM versus DM comparison"><br><sub>The constrained-deadline URGENT_B task misses under RM and is protected under DM.</sub></td>
 </tr>
 <tr>
@@ -419,7 +419,7 @@ t=6.480 s | SAFE     -> NORMAL   | NONE
   <img src="docs/media/08-deadline-fault/03-supervised-timing-results.png" width="49%" alt="Supervised timing fault results">
   <img src="docs/media/08-deadline-fault/04-supervised-state-recovery.png" width="49%" alt="Supervised safe-state recovery">
 </p>
-<p align="center"><sub>Measured terminal evidence: timing statistics on the left, state transition and recovery evidence on the right.</sub></p>
+<p align="center"><sub>Measured deadline-miss comparison on the left; supervised state-transition and recovery timeline on the right.</sub></p>
 
 During `SAFE`, the deliberately faulty CONTROL workload is shed and new actuator motion is inhibited. Once timing remains healthy for the recovery interval, the system returns to `NORMAL`.
 
@@ -458,7 +458,7 @@ Measured reduction:
 <p align="center">
   <img src="docs/media/09-priority-inversion/01-priority-inheritance-comparison.png" width="900" alt="Priority inversion and priority inheritance comparison">
 </p>
-<p align="center"><sub>Actual terminal output from the single-core priority-inversion experiment.</sub></p>
+<p align="center"><sub>Measured HIGH-priority blocking time from the single-core experiment, comparing a normal mutex with PTHREAD_PRIO_INHERIT.</sub></p>
 
 Priority inheritance temporarily allows the low-priority mutex owner to inherit the blocked high-priority thread's priority, reducing interference from MEDIUM.
 
