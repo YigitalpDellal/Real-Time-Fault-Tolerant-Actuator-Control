@@ -32,13 +32,6 @@ The Raspberry Pi executes the high-level real-time workload and supervision logi
 
 The final test platform combines a Raspberry Pi 3 Model B+, TM4C123GXL LaunchPad, two MG90S servos, a dual-axis bracket, an external 5 V actuator supply, and shared-ground UART communication.
 
-<p align="center">
-  <img src="docs/media/01-hardware/project-hardware-overview.jpg" width="900" alt="Complete Raspberry Pi, TM4C123 and dual-axis actuator hardware setup">
-</p>
-<p align="center"><sub>Complete physical system with Raspberry Pi, TM4C123GXL, breadboard wiring, external actuator power and the PAN/TILT mechanism connected.</sub></p>
-
-The image above is the actual complete hardware setup used for the project. It is shown first, at full repository quality and without being merged into a collage, because it gives the clearest single view of the Raspberry Pi, TM4C123GXL, breadboard wiring, external actuator power and dual-axis mechanism connected as one system.
-
 ### Visual Evidence Gallery
 
 Every image below comes from this repository's own measured runs. The gallery is deliberately arranged as a quick technical story: scheduler behavior, injected faults, recovery, concurrency behavior, deadline-policy comparison, and final physical validation.
@@ -79,7 +72,7 @@ Every image below comes from this repository's own measured runs. The gallery is
 
 The servos are **not powered from the Raspberry Pi rail**. They use the external 5 V source, while Raspberry Pi and TM4C123 share ground for a valid UART reference.
 
-The full-system photograph above is kept as the primary hardware view instead of using a stitched collage. The controller-side wiring, external actuator supply and shared-ground arrangement are described directly here so the original image quality is preserved.
+The controller-side wiring, external actuator supply and shared-ground arrangement are documented here independently from the scheduler and fault-injection evidence.
 
 ---
 
